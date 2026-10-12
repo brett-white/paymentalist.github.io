@@ -1,0 +1,29 @@
+# Deploys to Firebase Hosting (live channel) on every push to main.
+# Authenticates with Workload Identity Federation, so no service account key is stored.
+name: Deploy to Firebase Hosting on merge
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npx --yes firebase-tools deploy --only hosting --project paymentalist-site --non-interactive
